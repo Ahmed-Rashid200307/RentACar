@@ -22,10 +22,10 @@ public class Car {
   protected String renterEmail;
   protected String renterAddress;
   protected String renterCity;
-  protected int renterId;
+  protected String renterId;
   
   //Car Rent status
-  protected boolean isAvailable;
+  protected boolean isAvailable = true;
   protected LocalDateTime rentalDate;
   protected LocalDateTime returnDate;
   protected int rentalDuration;
@@ -45,16 +45,15 @@ public class Car {
   }
 
 
-  public void SetRenterDetails(String name, String contact, String email, String address, String city, int ID, int duration) {
-    if(this.isAvailable == true) {
-      this.isAvailable = false;
-      this.renterName = name;
-      this.renterContact = contact;
-      this.renterEmail = email;
-      this.renterAddress = address;
-      this.renterCity = city;
-      this.renterId = ID;
-      setRentedCarDetails(duration);
+  public void SetRenterDetails(Map<String, Object> map) {
+    if(!this.isAvailable) {
+      this.renterName = (String) map.get("name");
+      this.renterContact = (String) map.get("contact");
+      this.renterEmail = (String) map.get("email");;
+      this.renterAddress = (String) map.get("address");
+      this.renterCity = (String) map.get("city");
+      this.renterId = (String) map.get("ID");
+      setRentedCarDetails(Integer.parseInt((String) map.get("durationInHours")));
     }
     else {
       System.out.println("Car is already rented");
@@ -68,6 +67,7 @@ public class Car {
     Duration duration = Duration.between(today, returnDate);
     this.rentalDuration = (int)duration.toHours();
     this.rentalCost = calculateCost(rentalDuration, rentPerHour);
+    this.isAvailable = false;
   }
 
   public void carReturned() {
@@ -118,12 +118,33 @@ public class Car {
         throw new IllegalArgumentException("Unsupported type: " + dataType.getName());
       }
     }
-}
+  }
+
+  public Object getter(String fieldName) throws NoSuchFieldException, SecurityException, IllegalAccessException {
+    Field field = null;
+    Class<?> currentClass = this.getClass();
+
+    while (currentClass != null) {
+        try {
+            field = currentClass.getDeclaredField(fieldName);
+            break;
+        } catch (NoSuchFieldException e) {
+            currentClass = currentClass.getSuperclass();
+        }
+    }
+
+    if (field == null) {
+        throw new NoSuchFieldException("Field not found");
+    } else {
+        field.setAccessible(true);
+        return field.get(this);
+    }
+  }
 
   
   public void displayDetails () {
     System.out.println("---------------------------------------");
-    System.out.println("\t|Brand: " + brand + "| Model: " + model +"|");
+    System.out.println("     |Brand: " + brand + "| Model: " + model +"|");
     System.out.println("---------------------------------------");
     System.out.println("Year: " + year);
     System.out.println("Price: " + price);
@@ -146,7 +167,7 @@ public class Car {
     System.out.println("Rental Date: " + rentalDate);
     System.out.println("Return Date: " + returnDate);
     System.out.println("Rental Duration: " + rentalDuration);
-    System.out.println("Rental Cost: " + rentalCost);
+    System.out.println("Rental Cost: " + rentalCost + "$");
     System.out.println("---------------------------------------");
   }
 }
